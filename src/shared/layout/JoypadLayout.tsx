@@ -7,8 +7,7 @@ const JoypadLayout = () => {
   const navigate = useNavigate();
 
   onMount(async () => {
-    // TODO: riabilita auth appena il capo fa cose
-    if (false) {
+    if (!useAuth?.isAuthenticated) {
       navigate("/auth/login", {replace: true});
     }
   });

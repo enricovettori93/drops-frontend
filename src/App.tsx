@@ -1,6 +1,7 @@
 import type { Component } from 'solid-js';
 import { Routes, Route } from "solid-app-router"
-import { lazy } from "solid-js";
+import {lazy, onMount} from "solid-js";
+import {useAuthDispatch} from "./shared/context/auth.context";
 const JoypadLayout = lazy(() => import("./shared/layout/JoypadLayout"));
 const Landing = lazy(() => import("./pages/Home"));
 const Joypad = lazy(() => import("./pages/Joypad"));
@@ -17,6 +18,14 @@ const gamePage = () => {
 }
 
 const App: Component = () => {
+  const authDispatch = useAuthDispatch();
+
+  onMount(async () => {
+    if (authDispatch?.isComingFromRedirect()) {
+      await authDispatch?.handleRedirectCallback();
+    }
+  });
+
   return (
     <Routes>
       <Route path="/" component={Landing} />

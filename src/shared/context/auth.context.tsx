@@ -3,6 +3,7 @@ import createAuth0Client, {Auth0Client, User} from "@auth0/auth0-spa-js";
 import authConfig from "../auth.config";
 import {AUTH_REDIRECT_URI} from "../constants";
 import {createStore} from "solid-js/store";
+import {useNavigate} from "solid-app-router";
 
 interface AuthDispatchContext {
   login: () => Promise<void>
@@ -10,6 +11,8 @@ interface AuthDispatchContext {
   getUser: () => Promise<User | undefined>
   getToken: () => Promise<string | undefined>
   isAuthenticated: () => Promise<boolean | undefined>
+  handleRedirectCallback: () => Promise<void>
+  isComingFromRedirect: () => boolean
 }
 
 interface AuthStateContext {
@@ -21,7 +24,7 @@ const AuthDispatchContext = createContext<AuthDispatchContext>();
 const AuthStateContext = createContext<AuthStateContext>();
 
 const initialState: AuthStateContext = {
-  loading: false,
+  loading: true,
   isAuthenticated: false
 }
 
@@ -39,21 +42,30 @@ const LoginLoader = () => {
 
 const AuthProvider = (props: AuthProviderProps) => {
   const [store, setStore] = createStore(initialState);
-  const [auth, setAuth] = createSignal<Auth0Client | undefined>(undefined)
+  const [authClient, setAuthClient] = createSignal<Auth0Client | undefined>(undefined);
+  const navigate = useNavigate();
 
   onMount(async () => {
     await configureClient();
+    setStore("loading", false);
+    const isAuthenticated = await authClient()?.isAuthenticated();
+
+    if (typeof isAuthenticated === "boolean") {
+      setStore("isAuthenticated", isAuthenticated);
+    }
   });
 
   async function configureClient() {
-    setAuth(await createAuth0Client({
+    const client = await createAuth0Client({
       domain: authConfig.domain,
       client_id: authConfig.clientId
-    }));
+    });
+
+    setAuthClient(client);
   }
 
   async function login() {
-    await auth()?.loginWithRedirect({
+    await authClient()?.loginWithRedirect({
       redirect_uri: AUTH_REDIRECT_URI
     });
 
@@ -61,28 +73,33 @@ const AuthProvider = (props: AuthProviderProps) => {
   }
 
   async function logout() {
-    await auth()?.logout({
+    await authClient()?.logout({
       returnTo: AUTH_REDIRECT_URI
     });
 
     setStore('isAuthenticated', false);
   }
 
-  async function handleRedirectCallback() {
-    await auth()?.handleRedirectCallback()
-    window.history.replaceState({}, document.title, "/joypad/");
-  }
-
   async function isAuthenticated() {
-    return auth()?.isAuthenticated();
+    return authClient()?.isAuthenticated();
   }
 
   async function getUser() {
-    return auth()?.getUser();
+    return authClient()?.getUser();
   }
 
   async function getToken() {
-    return auth()?.getTokenSilently();
+    return authClient()?.getTokenSilently();
+  }
+
+  function isComingFromRedirect() {
+    const query = window.location.search;
+    return query.includes("code=") && query.includes("state=");
+  }
+
+  async function handleRedirectCallback() {
+    await authClient()?.handleRedirectCallback();
+    navigate("/joypad", {replace: true});
   }
 
   return (
@@ -93,7 +110,9 @@ const AuthProvider = (props: AuthProviderProps) => {
           login,
           getToken,
           getUser,
-          isAuthenticated
+          isAuthenticated,
+          isComingFromRedirect,
+          handleRedirectCallback
         }}
       >
         <Show when={!store.loading} fallback={<LoginLoader/>}>
