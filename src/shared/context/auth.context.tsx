@@ -4,6 +4,8 @@ import authConfig from "../auth.config";
 import {AUTH_REDIRECT_URI} from "../constants";
 import {createStore} from "solid-js/store";
 import {useNavigate} from "solid-app-router";
+import Login from "../../pages/Login";
+import LoginLoader from "../components/LoginLoader";
 
 interface AuthDispatchContext {
   login: () => Promise<void>
@@ -30,14 +32,6 @@ const initialState: AuthStateContext = {
 
 interface AuthProviderProps {
   children: any
-}
-
-const LoginLoader = () => {
-  return (
-    <>
-      Loading...
-    </>
-  )
 }
 
 const AuthProvider = (props: AuthProviderProps) => {
@@ -115,7 +109,7 @@ const AuthProvider = (props: AuthProviderProps) => {
           handleRedirectCallback
         }}
       >
-        <Show when={!store.loading} fallback={<LoginLoader/>}>
+        <Show when={!store.loading} fallback={LoginLoader}>
           {props.children}
         </Show>
       </AuthDispatchContext.Provider>

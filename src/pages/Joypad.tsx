@@ -1,6 +1,7 @@
 import {createStore} from "solid-js/store";
 import {SLIDER_TYPE} from "../shared/constants";
 import {createMemo} from "solid-js";
+import {useGameDispatch} from "../shared/context/game.context";
 
 interface JoypadState {
   military: ResourceType
@@ -29,6 +30,7 @@ const initialState: JoypadState = {
 }
 
 const Joypad = () => {
+  const gameDispatch = useGameDispatch();
   const [joypadStore, setJoypadStore] = createStore<JoypadState>(initialState);
   const MIN = 0;
   const MAX = 100;
@@ -56,16 +58,26 @@ const Joypad = () => {
 
   const getTotal = createMemo(() => {
     return joypadStore.research.value + joypadStore.production.value + joypadStore.military.value;
-  });
+  })
 
+  const handleSliderChange = () => {
+    gameDispatch?.sendSliderValues({
+      military: joypadStore.military.value,
+      production: joypadStore.production.value,
+      research: joypadStore.research.value
+    });
+  }
 
   return (
     <div class={"flex flex-col"}>
       <input onInput={(e: any) => handleSliderInput(parseInt(e.target.value, 10), SLIDER_TYPE.MILITARY)}
+             onChange={handleSliderChange}
              type="range" min={0} max={100} id={SLIDER_TYPE.MILITARY} value={joypadStore.military.value} step={1}/>
       <input onInput={(e: any) => handleSliderInput(parseInt(e.target.value, 10), SLIDER_TYPE.RESEARCH)}
+             onChange={handleSliderChange}
              type="range" min={0} max={100} id={SLIDER_TYPE.RESEARCH} value={joypadStore.research.value} step={1}/>
       <input onInput={(e: any) => handleSliderInput(parseInt(e.target.value, 10), SLIDER_TYPE.PRODUCTION)}
+             onChange={handleSliderChange}
              type="range" min={0} max={100} id={SLIDER_TYPE.PRODUCTION} value={joypadStore.production.value} step={1}/>
     </div>
   )
