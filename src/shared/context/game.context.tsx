@@ -5,6 +5,7 @@ import {Client, Room} from "colyseus.js";
 import GameLoader from "../components/GameLoader";
 import {useAuthDispatch} from "./auth.context";
 import {User} from "@auth0/auth0-spa-js";
+import {BATTLE_ROOM, LOCALSTORAGE, RELAY_ROOM} from "../constants";
 
 interface GameDispatchContext {
   init: () => void
@@ -16,7 +17,7 @@ interface GameDispatchContext {
   werePlayingAGame: () => boolean
   saveBattleSessionOnStorage: () => void
   joinBattleRoom: (user: User) => Promise<void>
-  handleStateChange: (user: User) => Promise<void>
+  handleStateChange: (user: User) => void
   sendSliderValues: ({ military, production, research}: { military: number, production: number, research: number }) => void
 }
 
@@ -89,10 +90,10 @@ const GameProvider = (props: GameProviderProps) => {
       setStore("relayRoom", relayRoom);
 
       console.log('sending identity');
-      store.relayRoom?.send("identity", buildIdentityString(user))
+      store.relayRoom?.send(RELAY_ROOM.IDENTITY, buildIdentityString(user))
       console.log("Joined lobby");
 
-      store.relayRoom?.onMessage("queue", (queue: any) => {
+      store.relayRoom?.onMessage(RELAY_ROOM.QUEUE, (queue: any) => {
         store.relayQueue = queue;
       });
     }
@@ -100,7 +101,7 @@ const GameProvider = (props: GameProviderProps) => {
 
   const waitForBattleReady = async () => {
     return await new Promise<void>((resolve) => {
-      store.relayRoom?.onMessage("battle_ready", () => {
+      store.relayRoom?.onMessage(RELAY_ROOM.BATTLE_READY, () => {
         console.log("Battle ready");
         store.relayRoom?.leave();
         resolve();
@@ -110,28 +111,28 @@ const GameProvider = (props: GameProviderProps) => {
 
   const waitForBattleStart = async () => {
     return await new Promise<void>((resolve) => {
-      store.battleRoom?.onMessage("battle_start", () => {
+      store.battleRoom?.onMessage(BATTLE_ROOM.BATTLE_START, () => {
         resolve();
       });
     })
   }
 
   const clearBattleRoomOnStorage = () => {
-    localStorage.removeItem("battle_room_id");
-    localStorage.removeItem("battle_session_id");
+    localStorage.removeItem(LOCALSTORAGE.BATTLE_ROOM_ID);
+    localStorage.removeItem(LOCALSTORAGE.BATTLE_SESSION_ID);
   }
 
   const werePlayingAGame = () => {
-    return Boolean(localStorage.getItem("battle_session_id"));
+    return Boolean(localStorage.getItem(LOCALSTORAGE.BATTLE_SESSION_ID));
   }
 
   const saveBattleSessionOnStorage = () => {
-    store.battleRoom && localStorage.setItem(`battle_session`, store.battleRoom?.sessionId);
+    store.battleRoom && localStorage.setItem(LOCALSTORAGE.BATTLE_SESSION, store.battleRoom?.sessionId);
   }
 
   const joinBattleRoom = async (user: User) => {
     if (werePlayingAGame()) {
-      const sessionId = localStorage.getItem("battle_session_id") || "";
+      const sessionId = localStorage.getItem(LOCALSTORAGE.BATTLE_SESSION_ID) || "";
       const reconnected = await gameClient()?.reconnect("battle", sessionId);
       reconnected && setStore("battleRoom", reconnected);
     } else {
@@ -142,12 +143,21 @@ const GameProvider = (props: GameProviderProps) => {
 
     saveBattleSessionOnStorage();
 
-    store.battleRoom?.send("identity", buildIdentityString(user))
+    store.battleRoom?.send(BATTLE_ROOM.IDENTITY, buildIdentityString(user))
   }
 
-  // TODO: fare che è complesso questo
   const handleStateChange = (user: User) => {
-    return Promise.resolve();
+    // TODO: serve? copiato e incollato dal codice originale ma non sembra essere usato da nessuna parte
+    store.battleRoom?.onStateChange(state => {
+      const field = []
+      state.field.cols.forEach((col: any) => {
+        const column: any[] = [];
+        col.col.forEach((cell: any) => {
+          column.push(cell);
+        });
+        field.push(column);
+      });
+    });
   }
 
   const buildIdentityString = (user: User) => {
@@ -160,7 +170,7 @@ const GameProvider = (props: GameProviderProps) => {
     toSend[0] = military;
     toSend[1] = production;
     toSend[2] = research;
-    store.battleRoom?.send("action", toSend.join(','));
+    store.battleRoom?.send(BATTLE_ROOM.ACTION, toSend.join(','));
   }
 
   return (

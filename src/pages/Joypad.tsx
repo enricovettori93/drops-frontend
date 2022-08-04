@@ -2,6 +2,7 @@ import {createStore} from "solid-js/store";
 import {SLIDER_TYPE} from "../shared/constants";
 import {createMemo} from "solid-js";
 import {useGameDispatch} from "../shared/context/game.context";
+import {useAuthDispatch} from "../shared/context/auth.context";
 
 interface JoypadState {
   military: ResourceType
@@ -31,6 +32,7 @@ const initialState: JoypadState = {
 
 const Joypad = () => {
   const gameDispatch = useGameDispatch();
+  const authDispatch = useAuthDispatch();
   const [joypadStore, setJoypadStore] = createStore<JoypadState>(initialState);
   const MIN = 0;
   const MAX = 100;
@@ -70,15 +72,20 @@ const Joypad = () => {
 
   return (
     <div class={"flex flex-col"}>
+      <label for={SLIDER_TYPE.MILITARY}>Military</label>
       <input onInput={(e: any) => handleSliderInput(parseInt(e.target.value, 10), SLIDER_TYPE.MILITARY)}
              onChange={handleSliderChange}
              type="range" min={0} max={100} id={SLIDER_TYPE.MILITARY} value={joypadStore.military.value} step={1}/>
+      <label for={SLIDER_TYPE.RESEARCH}>Research</label>
       <input onInput={(e: any) => handleSliderInput(parseInt(e.target.value, 10), SLIDER_TYPE.RESEARCH)}
              onChange={handleSliderChange}
              type="range" min={0} max={100} id={SLIDER_TYPE.RESEARCH} value={joypadStore.research.value} step={1}/>
+      <label for={SLIDER_TYPE.PRODUCTION}>Production</label>
       <input onInput={(e: any) => handleSliderInput(parseInt(e.target.value, 10), SLIDER_TYPE.PRODUCTION)}
              onChange={handleSliderChange}
              type="range" min={0} max={100} id={SLIDER_TYPE.PRODUCTION} value={joypadStore.production.value} step={1}/>
+
+      <button onClick={() => authDispatch?.logout()}>logout</button>
     </div>
   )
 }
