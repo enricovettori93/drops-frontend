@@ -6,6 +6,7 @@ import GameLoader from "../components/GameLoader";
 import {User} from "@auth0/auth0-spa-js";
 import {BATTLE_ROOM, LOCALSTORAGE, MULTIPLAYER_HOST, RELAY_ROOM} from "../constants";
 import {BattleInfoCurrentPlayer} from "../../models/user";
+import {SliderValuesPayload} from "../../models/game";
 
 interface GameDispatchContext {
   init: () => void
@@ -17,7 +18,7 @@ interface GameDispatchContext {
   werePlayingAGame: () => boolean
   saveBattleSessionOnStorage: () => void
   joinBattleRoom: (user: User) => Promise<void>
-  sendSliderValues: ({ military, production, research}: { military: number, production: number, research: number }) => void
+  sendSliderValues: ({ military, production, research}: SliderValuesPayload) => void
 }
 
 interface GameStateContext {
@@ -193,7 +194,7 @@ const GameProvider = (props: GameProviderProps) => {
     return `${user.sub}#${user.name}#${user.picture}`;
   }
 
-  const sendSliderValues = ({military, production, research}: { military: number, production: number, research: number }) => {
+  const sendSliderValues = ({military, production, research}: SliderValuesPayload) => {
     const toSend: number[] = [];
     toSend[0] = military;
     toSend[1] = production;
