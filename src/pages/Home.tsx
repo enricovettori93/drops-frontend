@@ -9,7 +9,7 @@ const Home = () => {
         <h1 class="text-5xl">Drops</h1>
         <div>There it is, the new challenge...</div>
         <div class="flex">
-          <Link href="/joypad" class={buttonStyles}>
+          <Link href="/battle" class={buttonStyles}>
             Play now
           </Link>
           <Link href="/viewer" class={buttonStyles}>

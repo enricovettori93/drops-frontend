@@ -3,9 +3,9 @@ import {createStore} from "solid-js/store";
 import * as Colyseus from "colyseus.js";
 import {Client, Room} from "colyseus.js";
 import GameLoader from "../components/GameLoader";
-import {useAuthDispatch} from "./auth.context";
 import {User} from "@auth0/auth0-spa-js";
-import {BATTLE_ROOM, LOCALSTORAGE, RELAY_ROOM} from "../constants";
+import {BATTLE_ROOM, LOCALSTORAGE, MULTIPLAYER_HOST, RELAY_ROOM} from "../constants";
+import {BattleInfoCurrentPlayer} from "../../models/user";
 
 interface GameDispatchContext {
   init: () => void
@@ -17,20 +17,23 @@ interface GameDispatchContext {
   werePlayingAGame: () => boolean
   saveBattleSessionOnStorage: () => void
   joinBattleRoom: (user: User) => Promise<void>
-  handleStateChange: (user: User) => void
   sendSliderValues: ({ military, production, research}: { military: number, production: number, research: number }) => void
 }
 
 interface GameStateContext {
   battleRoom: Room | null,
   relayRoom: Room | null,
-  relayQueue: any[],
-  bootstrapped: boolean
+  relayQueue: string[],
+  bootstrapped: boolean,
+  ui: UI,
+  currentPlayerStats: BattleInfoCurrentPlayer | null
 }
 
 interface GameProviderProps {
   children: any
 }
+
+type UI = "intro" | "queue" | "playing" | "ended" | "scoreboard";
 
 const GameDispatchContext = createContext<GameDispatchContext>();
 const GameStateContext = createContext<GameStateContext>();
@@ -39,30 +42,29 @@ const initialState: GameStateContext = {
   battleRoom: null,
   relayQueue: [],
   relayRoom: null,
-  bootstrapped: false
+  bootstrapped: false,
+  ui: "intro",
+  currentPlayerStats: null
 }
 
 const GameProvider = (props: GameProviderProps) => {
   const [store, setStore] = createStore(initialState);
   const [gameClient, setClientClient] = createSignal<Client>();
-  const authDispatch = useAuthDispatch();
 
   onMount(async () => {
     await init();
   });
 
   const init = async () => {
-    setClientClient(new Colyseus.Client('ws://localhost:2567'));
+    console.log("bootstrapping... connecting at", MULTIPLAYER_HOST)
+    setClientClient(new Colyseus.Client(MULTIPLAYER_HOST));
     setStore("bootstrapped", true);
-
-    const user = await authDispatch?.getUser();
-    if (user) {
-      await startGameLoop(user);
-    }
   }
 
   const startGameLoop = async (user: User) => {
     try {
+      setStore("ui", "queue");
+
       console.log('Joining relay room...');
       await joinRelayRoom(user);
 
@@ -77,10 +79,39 @@ const GameProvider = (props: GameProviderProps) => {
 
       console.log("Battle started");
 
-      await handleStateChange(user);
+      handleBattleStateChange(user);
+
+      setStore("ui", "playing");
+
+      await waitForEndGame();
     } catch (err) {
       console.error(err);
     }
+  }
+
+  const handleBattleStateChange = (user: User) => {
+    store.battleRoom?.onStateChange(state => {
+      let currentPlayer: any;
+
+      state.players.forEach((player: any) => {
+        if (player.sub === user.sub) {
+          currentPlayer = {...player};
+        }
+      });
+
+      if (currentPlayer) {
+        setStore("currentPlayerStats", (oldValue) => {
+          return {
+            ...oldValue,
+            resources: currentPlayer.resources || 0,
+            score: currentPlayer.score || 0,
+            development: currentPlayer.development || 0,
+            milestones_reached: currentPlayer.milestones_reached || 0,
+            color: currentPlayer.color
+          }
+        })
+      }
+    });
   }
 
   const joinRelayRoom = async (user: User) => {
@@ -94,7 +125,8 @@ const GameProvider = (props: GameProviderProps) => {
       console.log("Joined lobby");
 
       store.relayRoom?.onMessage(RELAY_ROOM.QUEUE, (queue: any) => {
-        store.relayQueue = queue;
+        console.log("[QUEUE] relay_room received message", queue);
+        setStore("relayQueue",(prev) => [...queue]);
       });
     }
   }
@@ -104,6 +136,17 @@ const GameProvider = (props: GameProviderProps) => {
       store.relayRoom?.onMessage(RELAY_ROOM.BATTLE_READY, () => {
         console.log("Battle ready");
         store.relayRoom?.leave();
+        resolve();
+      })
+    })
+  }
+
+  const waitForEndGame = async () => {
+    return await new Promise<void>((resolve) => {
+      store.battleRoom?.onMessage(BATTLE_ROOM.END_GAME, () => {
+        console.log("Battle ended!");
+        store.battleRoom?.leave();
+        setStore("ui", "ended");
         resolve();
       })
     })
@@ -146,22 +189,7 @@ const GameProvider = (props: GameProviderProps) => {
     store.battleRoom?.send(BATTLE_ROOM.IDENTITY, buildIdentityString(user))
   }
 
-  const handleStateChange = (user: User) => {
-    // TODO: serve? copiato e incollato dal codice originale ma non sembra essere usato da nessuna parte
-    store.battleRoom?.onStateChange(state => {
-      const field = []
-      state.field.cols.forEach((col: any) => {
-        const column: any[] = [];
-        col.col.forEach((cell: any) => {
-          column.push(cell);
-        });
-        field.push(column);
-      });
-    });
-  }
-
   const buildIdentityString = (user: User) => {
-    console.log(`user`, user)
     return `${user.sub}#${user.name}#${user.picture}`;
   }
 
@@ -185,7 +213,6 @@ const GameProvider = (props: GameProviderProps) => {
         werePlayingAGame,
         saveBattleSessionOnStorage,
         joinBattleRoom,
-        handleStateChange,
         sendSliderValues
       }}>
         <Show when={store.bootstrapped} fallback={GameLoader}>

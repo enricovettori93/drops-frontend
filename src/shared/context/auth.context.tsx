@@ -19,7 +19,8 @@ interface AuthDispatchContext {
 
 interface AuthStateContext {
   loading: boolean,
-  isAuthenticated: boolean
+  isAuthenticated: boolean,
+  user: User | undefined
 }
 
 const AuthDispatchContext = createContext<AuthDispatchContext>();
@@ -27,7 +28,8 @@ const AuthStateContext = createContext<AuthStateContext>();
 
 const initialState: AuthStateContext = {
   loading: true,
-  isAuthenticated: false
+  isAuthenticated: false,
+  user: undefined
 }
 
 interface AuthProviderProps {
@@ -40,30 +42,47 @@ const AuthProvider = (props: AuthProviderProps) => {
   const navigate = useNavigate();
 
   onMount(async () => {
-    await configureClient();
-    setStore("loading", false);
-    const isAuthenticated = await authClient()?.isAuthenticated();
 
-    if (typeof isAuthenticated === "boolean") {
-      setStore("isAuthenticated", isAuthenticated);
-    }
+    await configureClient();
+    await checkLoginStatus();
+
+    setStore("loading", false);
+
+    console.log("finished login loading")
   });
 
+  async function checkLoginStatus() {
+    const isAuthenticated = await authClient()?.isAuthenticated();
+
+    console.log("user is auth", isAuthenticated)
+
+    if (typeof isAuthenticated === "boolean") {
+      const user = await authClient()?.getUser()
+      setStore("isAuthenticated", isAuthenticated);
+      setStore("user", user);
+    }
+  }
+
   async function configureClient() {
+    console.log("configuring oauth client")
+
     const client = await createAuth0Client({
       domain: authConfig.domain,
       client_id: authConfig.clientId
     });
 
     setAuthClient(client);
+
+    console.log("configured oauth client")
   }
 
   async function login() {
-    await authClient()?.loginWithRedirect({
-      redirect_uri: AUTH_REDIRECT_URI
-    });
+    console.log("init login flow")
 
-    setStore('isAuthenticated', true);
+    await authClient()?.loginWithPopup();
+    await checkLoginStatus();
+
+    console.log("finished login flow")
   }
 
   async function logout() {
@@ -71,7 +90,7 @@ const AuthProvider = (props: AuthProviderProps) => {
       returnTo: AUTH_REDIRECT_URI
     });
 
-    setStore('isAuthenticated', false);
+    setStore("isAuthenticated", false);
   }
 
   async function isAuthenticated() {
@@ -93,7 +112,7 @@ const AuthProvider = (props: AuthProviderProps) => {
 
   async function handleRedirectCallback() {
     await authClient()?.handleRedirectCallback();
-    navigate("/joypad", {replace: true});
+    navigate("/battle", {replace: true});
   }
 
   return (

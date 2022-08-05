@@ -1,9 +1,10 @@
 import {Outlet, useNavigate} from "solid-app-router";
 import {onMount} from "solid-js";
-import {useAuthState} from "../context/auth.context";
+import {useAuthDispatch, useAuthState} from "../context/auth.context";
 
-const JoypadLayout = () => {
+const BattleLayout = () => {
   const useAuth = useAuthState();
+  const authDispatch = useAuthDispatch();
   const navigate = useNavigate();
 
   onMount(async () => {
@@ -14,9 +15,12 @@ const JoypadLayout = () => {
 
   return (
     <>
+      <div class={"flex justify-end"}>
+        <button onClick={() => authDispatch?.logout()}>logout</button>
+      </div>
       <Outlet></Outlet>
     </>
   )
 }
 
-export default JoypadLayout;
+export default BattleLayout;

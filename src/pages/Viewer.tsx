@@ -5,8 +5,8 @@ import {HOSTNAME} from "../shared/constants";
 const Viewer = () => {
 
   onMount(async () => {
-     await QRCode.toCanvas(document.getElementById("qr-right"), `${HOSTNAME}/joypad/`);
-     await QRCode.toCanvas(document.getElementById("qr-left"), `${HOSTNAME}/joypad/`);
+     await QRCode.toCanvas(document.getElementById("qr-right"), `${HOSTNAME}/battle/`);
+     await QRCode.toCanvas(document.getElementById("qr-left"), `${HOSTNAME}/battle/`);
   });
 
   return (
