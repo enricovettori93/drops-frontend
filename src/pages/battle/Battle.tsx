@@ -13,10 +13,11 @@ const Battle = () => {
   const gameState = useGameState();
 
   const isInIntro = () => gameState?.ui === "intro";
-  const isInGame = () => gameState?.ui === "playing" && gameState?.currentPlayerStats !== null;
+  const isInGame = () => gameState?.ui === "playing";
   const isInQueue = () => gameState?.ui === "queue";
   const isGameEnded = () => gameState?.ui === "ended";
   const isLoadingRelayRoom = () => gameState?.loading.relayRoom;
+  const isLoadingBattleRoom = () => gameState?.loading.battleRoom;
 
   const handleUserJoin = () => {
     gameDispatch?.startGameLoop(useAuth?.user as User);
@@ -50,7 +51,10 @@ const Battle = () => {
       }
       {
         isInGame() && (
-          <JoyPad onChange={handleSliderChange} playerStats={gameState?.currentPlayerStats as BattleInfoCurrentPlayer}/>
+          <>
+            {!!isLoadingBattleRoom() && <span>Joining battle...</span>}
+            {!isLoadingBattleRoom() && gameState?.currentPlayerStats !== null && <JoyPad onChange={handleSliderChange} playerStats={gameState?.currentPlayerStats as BattleInfoCurrentPlayer}/>}
+          </>
         )
       }
       {

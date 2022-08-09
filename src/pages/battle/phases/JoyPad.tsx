@@ -1,6 +1,6 @@
 import {createStore} from "solid-js/store";
 import {DEVELOPMENT_AT_END_ROUND, RESOURCES_AT_END_ROUND, SLIDER_TYPE} from "../../../shared/constants";
-import {createMemo} from "solid-js";
+import {createMemo, onMount} from "solid-js";
 import {BattleInfoCurrentPlayer} from "../../../models/user";
 
 interface SliderState {
@@ -39,6 +39,12 @@ const JoyPad = ({onChange, playerStats}: JoyPadProps) => {
   const MIN = 0;
   const MAX = 100;
 
+  onMount(() => {
+    setJoyPadStore("military", "value", 34);
+    setJoyPadStore("production", "value", 33);
+    setJoyPadStore("research", "value", 33);
+  });
+
   const handleSliderInput = (value: number, type: SLIDER_TYPE) => {
 
     if (value < MIN || value > MAX) return;
@@ -47,17 +53,29 @@ const JoyPad = ({onChange, playerStats}: JoyPadProps) => {
     const maxTotal = 100;
     const blocked = 0;
 
-    setJoyPadStore(type, {value});
+    setJoyPadStore(type.toLowerCase() as SLIDER_TYPE, {value});
 
     if (sum > maxTotal || sum < maxTotal) {
       for (let sliderType in SLIDER_TYPE) {
         if (type !== sliderType && !joyPadStore[sliderType.toLowerCase() as SLIDER_TYPE].disabled) {
           setJoyPadStore(sliderType.toLowerCase() as SLIDER_TYPE,(oldValue) => {
-            return { value: oldValue.value - ((sum - maxTotal) / (2 - blocked)) };
+            return { value: valueBetweenMinAndMax(oldValue.value - ((sum - maxTotal) / (2 - blocked))) };
           });
         }
       }
     }
+  }
+
+  const valueBetweenMinAndMax = (value: number) => {
+    if (value > MAX) {
+      return MAX
+    }
+
+    if (value < MIN) {
+      return MIN;
+    }
+
+    return value;
   }
 
   const getTotal = createMemo(() => {

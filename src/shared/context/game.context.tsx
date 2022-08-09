@@ -30,7 +30,8 @@ interface GameStateContext {
   ui: UI,
   currentPlayerStats: BattleInfoCurrentPlayer | null,
   loading: {
-    relayRoom: boolean
+    relayRoom: boolean,
+    battleRoom: boolean
   }
 }
 
@@ -51,7 +52,8 @@ const initialState: GameStateContext = {
   ui: "intro",
   currentPlayerStats: null,
   loading: {
-    relayRoom: true
+    relayRoom: true,
+    battleRoom: true
   }
 }
 
@@ -159,6 +161,7 @@ const GameProvider = (props: GameProviderProps) => {
       store.battleRoom?.onMessage(BATTLE_ROOM.END_GAME, () => {
         console.log("Battle ended");
         store.battleRoom?.leave();
+        setStore("relayQueue", (old) => ([]));
         setStore("ui", "ended");
         resolve();
       })
@@ -196,6 +199,12 @@ const GameProvider = (props: GameProviderProps) => {
       const joined = await gameClient()?.join("battle");
       joined && setStore("battleRoom", joined);
     }
+
+    setStore(
+      produce(state => {
+        state.loading.battleRoom = false;
+      })
+    )
 
     saveBattleSessionOnStorage();
 
