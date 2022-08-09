@@ -14,8 +14,9 @@ const Battle = () => {
 
   const isInIntro = () => gameState?.ui === "intro";
   const isInGame = () => gameState?.ui === "playing" && gameState?.currentPlayerStats !== null;
-  const isInQueue = () => gameState?.ui === "queue" && (gameState?.relayQueue.length || 0) > 0;
+  const isInQueue = () => gameState?.ui === "queue";
   const isGameEnded = () => gameState?.ui === "ended";
+  const isLoadingRelayRoom = () => gameState?.loading.relayRoom;
 
   const handleUserJoin = () => {
     gameDispatch?.startGameLoop(useAuth?.user as User);
@@ -23,6 +24,10 @@ const Battle = () => {
 
   const handleSliderChange = (values: {military: number, research: number, production: number}) => {
     gameDispatch?.sendSliderValues(values);
+  }
+
+  const handlePlayAgain = () => {
+    gameDispatch?.playAgain();
   }
 
   return (
@@ -37,7 +42,10 @@ const Battle = () => {
       }
       {
         isInQueue() && (
-          <Queue players={gameState?.relayQueue}/>
+          <>
+            {!!isLoadingRelayRoom() && <span>Joining room...</span>}
+            {!isLoadingRelayRoom() && (gameState?.relayQueue.length || 0) > 0 && <Queue players={gameState?.relayQueue}/>}
+          </>
         )
       }
       {
@@ -47,7 +55,7 @@ const Battle = () => {
       }
       {
         isGameEnded() && (
-          <Ended/>
+          <Ended onPlayAgain={handlePlayAgain}/>
         )
       }
     </>

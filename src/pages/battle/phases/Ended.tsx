@@ -1,13 +1,15 @@
-import {Link} from "solid-app-router";
+interface IntroProps {
+  onPlayAgain: () => void
+}
 
-const Intro = () => {
+const Intro = ({onPlayAgain} : IntroProps) => {
   return (
     <>
       Thank you for playing!
       <br/>
-      <Link href={"/battle"}>
+      <button onClick={onPlayAgain}>
         Play again
-      </Link>
+      </button>
     </>
   )
 }

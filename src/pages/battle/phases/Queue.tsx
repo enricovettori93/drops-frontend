@@ -3,7 +3,6 @@ interface QueueProps {
 }
 
 const Queue = ({players}: QueueProps) => {
-
   const detail = (player: string) => {
     const name = player.split('|')[0];
     const connected = player.split('|')[1] === "true";
@@ -23,8 +22,8 @@ const Queue = ({players}: QueueProps) => {
       <ol>
         {
           players?.map(detail).map(player => (
-            <li class={!player.connected ? "disconnected" : undefined}>
-              <img src={player.avatar} alt=""/>
+            <li class={`${!player.connected ? "disconnected" : undefined} flex my-5`}>
+              <img src={player.avatar} alt="" class={"w-[50px] h-[50px] mr-5"}/>
               {player.name}
             </li>
           ))

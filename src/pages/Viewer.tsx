@@ -19,7 +19,7 @@ const Viewer = () => {
     p.draw = function () {
       p.background(81);
 
-      if (viewerState && Object.entries(viewerState?.playersMap).length > 0) {
+      if (viewerState && viewerState?.playersMap && Object.entries(viewerState?.playersMap).length > 0) {
         for (let i = 0; i < viewerState?.field.length; i++) {
           for (let j = 0; j < viewerState?.field[i].length; j++) {
 

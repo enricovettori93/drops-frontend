@@ -1,5 +1,5 @@
 import {createContext, createSignal, onMount, Show, useContext} from "solid-js";
-import {createStore} from "solid-js/store";
+import {createStore, produce} from "solid-js/store";
 import * as Colyseus from "colyseus.js";
 import {Client, Room} from "colyseus.js";
 import GameLoader from "../components/GameLoader";
@@ -19,6 +19,7 @@ interface GameDispatchContext {
   saveBattleSessionOnStorage: () => void
   joinBattleRoom: (user: User) => Promise<void>
   sendSliderValues: ({ military, production, research}: SliderValuesPayload) => void
+  playAgain: () => void
 }
 
 interface GameStateContext {
@@ -27,7 +28,10 @@ interface GameStateContext {
   relayQueue: string[],
   bootstrapped: boolean,
   ui: UI,
-  currentPlayerStats: BattleInfoCurrentPlayer | null
+  currentPlayerStats: BattleInfoCurrentPlayer | null,
+  loading: {
+    relayRoom: boolean
+  }
 }
 
 interface GameProviderProps {
@@ -45,7 +49,10 @@ const initialState: GameStateContext = {
   relayRoom: null,
   bootstrapped: false,
   ui: "intro",
-  currentPlayerStats: null
+  currentPlayerStats: null,
+  loading: {
+    relayRoom: true
+  }
 }
 
 const GameProvider = (props: GameProviderProps) => {
@@ -57,7 +64,7 @@ const GameProvider = (props: GameProviderProps) => {
   });
 
   const init = async () => {
-    console.log("bootstrapping... connecting at", MULTIPLAYER_HOST)
+    console.log("[GAME PROVIDER] bootstrapping... connecting at", MULTIPLAYER_HOST)
     setClientClient(new Colyseus.Client(MULTIPLAYER_HOST));
     setStore("bootstrapped", true);
   }
@@ -118,6 +125,12 @@ const GameProvider = (props: GameProviderProps) => {
   const joinRelayRoom = async (user: User) => {
     const relayRoom = await gameClient()?.join("relay");
 
+    setStore(
+      produce(state => {
+        state.loading.relayRoom = false;
+      })
+    )
+
     if (relayRoom) {
       setStore("relayRoom", relayRoom);
 
@@ -126,7 +139,6 @@ const GameProvider = (props: GameProviderProps) => {
       console.log("Joined lobby");
 
       store.relayRoom?.onMessage(RELAY_ROOM.QUEUE, (queue: any) => {
-        console.log("[QUEUE] relay_room received message", queue);
         setStore("relayQueue",(prev) => [...queue]);
       });
     }
@@ -145,7 +157,7 @@ const GameProvider = (props: GameProviderProps) => {
   const waitForEndGame = async () => {
     return await new Promise<void>((resolve) => {
       store.battleRoom?.onMessage(BATTLE_ROOM.END_GAME, () => {
-        console.log("Battle ended!");
+        console.log("Battle ended");
         store.battleRoom?.leave();
         setStore("ui", "ended");
         resolve();
@@ -202,6 +214,10 @@ const GameProvider = (props: GameProviderProps) => {
     store.battleRoom?.send(BATTLE_ROOM.ACTION, toSend.join(','));
   }
 
+  const playAgain = () => {
+    setStore("ui", "intro");
+  }
+
   return (
     <GameStateContext.Provider value={store}>
       <GameDispatchContext.Provider value={{
@@ -214,7 +230,8 @@ const GameProvider = (props: GameProviderProps) => {
         werePlayingAGame,
         saveBattleSessionOnStorage,
         joinBattleRoom,
-        sendSliderValues
+        sendSliderValues,
+        playAgain
       }}>
         <Show when={store.bootstrapped} fallback={GameLoader}>
           {props.children}

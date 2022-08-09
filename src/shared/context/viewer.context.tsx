@@ -10,7 +10,7 @@ interface ViewerStateContext  {
   socket: Socket | null,
   bootstrapped: boolean,
   field: number[][],
-  playersMap: {[key: string | number]: BattleInfoCurrentPlayer},
+  playersMap: {[key: string | number]: BattleInfoCurrentPlayer} | undefined,
   round: number,
   remainingTime: number
 }
@@ -80,6 +80,8 @@ const ViewerProvider = (props: ViewerProviderProps) => {
     });
 
     store.socket?.on(VIEWER_SOCKETS.PLAYERS, (players) => {
+      setStore("playersMap", undefined);
+
       let map: {[key: string]: BattleInfoCurrentPlayer} = {};
 
       players.forEach((player: BattleInfoCurrentPlayer) => {
@@ -87,7 +89,7 @@ const ViewerProvider = (props: ViewerProviderProps) => {
         map[Number(player.id)] = player;
       });
 
-      setStore("playersMap", map);
+      setStore("playersMap", (old) => map);
     });
 
     store.socket?.on(VIEWER_SOCKETS.TIME, (time) => {
