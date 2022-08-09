@@ -68,7 +68,8 @@ const AuthProvider = (props: AuthProviderProps) => {
 
     const client = await createAuth0Client({
       domain: authConfig.domain,
-      client_id: authConfig.clientId
+      client_id: authConfig.clientId,
+      cacheLocation: "localstorage"
     });
 
     setAuthClient(client);
