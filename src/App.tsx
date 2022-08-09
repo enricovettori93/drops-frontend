@@ -2,6 +2,7 @@ import type { Component } from 'solid-js';
 import { Routes, Route } from "solid-app-router"
 import {lazy, onMount} from "solid-js";
 import {useAuthDispatch} from "./shared/context/auth.context";
+import ViewerProvider from "./shared/context/viewer.context";
 const BattleLayout = lazy(() => import("./shared/layout/BattleLayout"));
 const Landing = lazy(() => import("./pages/Home"));
 const Battle = lazy(() => import("./pages/battle/Battle"));
@@ -14,6 +15,14 @@ const gamePage = () => {
     <GameProvider>
       <Battle/>
     </GameProvider>
+  )
+}
+
+const viewerPage = () => {
+  return (
+    <ViewerProvider>
+      <Viewer/>
+    </ViewerProvider>
   )
 }
 
@@ -32,7 +41,7 @@ const App: Component = () => {
       <Route path="/battle" component={BattleLayout}>
         <Route path="" component={gamePage}/>
       </Route>
-      <Route path="/viewer" element={Viewer} />
+      <Route path="/viewer" component={viewerPage} />
       <Route path="/auth/login" component={Login} />
     </Routes>
   );

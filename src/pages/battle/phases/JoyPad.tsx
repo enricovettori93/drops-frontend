@@ -117,7 +117,7 @@ const JoyPad = ({onChange, playerStats}: JoyPadProps) => {
                    class={"basis-10/12"}
                    disabled={isInputDisabled(SLIDER_TYPE.MILITARY)}
             />
-            <span class={"mx-auto"}>{Math.ceil(joyPadStore.military.value / 100)}</span>
+            <span class={"mx-auto"}>{Math.ceil(joyPadStore.military.value)}</span>
           </div>
         </div>
         <div class="range-container">
@@ -137,7 +137,7 @@ const JoyPad = ({onChange, playerStats}: JoyPadProps) => {
                    class={"basis-10/12"}
                    disabled={isInputDisabled(SLIDER_TYPE.PRODUCTION)}
             />
-            <span class={"mx-auto"}>{Math.ceil(joyPadStore.production.value / 100) * RESOURCES_AT_END_ROUND}/turn</span>
+            <span class={"mx-auto"}>{((joyPadStore.production.value / 100) * RESOURCES_AT_END_ROUND).toFixed(1)}/turn</span>
           </div>
         </div>
         <div class="range-container">
@@ -157,7 +157,7 @@ const JoyPad = ({onChange, playerStats}: JoyPadProps) => {
                    class={"basis-10/12"}
                    disabled={isInputDisabled(SLIDER_TYPE.RESEARCH)}
             />
-            <span class={"mx-auto"}>{Math.ceil(joyPadStore.research.value / 100) * DEVELOPMENT_AT_END_ROUND}/turn</span>
+            <span class={"mx-auto"}>{((joyPadStore.research.value / 100) * DEVELOPMENT_AT_END_ROUND).toFixed(1)}/turn</span>
           </div>
         </div>
       </div>

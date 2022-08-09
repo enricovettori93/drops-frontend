@@ -1,11 +1,13 @@
+import {Link} from "solid-app-router";
+
 const Intro = () => {
   return (
     <>
       Thank you for playing!
       <br/>
-      <button onClick={() => window.location.reload()}>
+      <Link href={"/battle"}>
         Play again
-      </button>
+      </Link>
     </>
   )
 }

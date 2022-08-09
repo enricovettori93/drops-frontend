@@ -9,7 +9,7 @@ import {BattleInfoCurrentPlayer} from "../../models/user";
 import {SliderValuesPayload} from "../../models/game";
 
 interface GameDispatchContext {
-  init: () => void
+  init: () => Promise<void>
   startGameLoop: (user: User) => Promise<void>
   joinRelayRoom: (user: User) =>  Promise<void>
   waitForBattleReady: () => Promise<void>
@@ -49,7 +49,7 @@ const initialState: GameStateContext = {
 }
 
 const GameProvider = (props: GameProviderProps) => {
-  const [store, setStore] = createStore(initialState);
+  const [store, setStore] = createStore<GameStateContext>(initialState);
   const [gameClient, setClientClient] = createSignal<Client>();
 
   onMount(async () => {

@@ -48,13 +48,13 @@ const AuthProvider = (props: AuthProviderProps) => {
 
     setStore("loading", false);
 
-    console.log("finished login loading")
+    console.log("[AUTH] finished login loading")
   });
 
   async function checkLoginStatus() {
     const isAuthenticated = await authClient()?.isAuthenticated();
 
-    console.log("user is auth", isAuthenticated)
+    console.log("[AUTH] user is auth", isAuthenticated)
 
     if (typeof isAuthenticated === "boolean") {
       const user = await authClient()?.getUser()
@@ -64,7 +64,7 @@ const AuthProvider = (props: AuthProviderProps) => {
   }
 
   async function configureClient() {
-    console.log("configuring oauth client")
+    console.log("[AUTH] configuring oauth client")
 
     const client = await createAuth0Client({
       domain: authConfig.domain,
@@ -73,16 +73,16 @@ const AuthProvider = (props: AuthProviderProps) => {
 
     setAuthClient(client);
 
-    console.log("configured oauth client")
+    console.log("[AUTH] configured oauth client")
   }
 
   async function login() {
-    console.log("init login flow")
+    console.log("[AUTH] init login flow")
 
     await authClient()?.loginWithPopup();
     await checkLoginStatus();
 
-    console.log("finished login flow")
+    console.log("[AUTH] finished login flow")
   }
 
   async function logout() {

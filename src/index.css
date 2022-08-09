@@ -23,3 +23,7 @@ code {
   width: 100vw;
   height: 100vh;
 }
+
+canvas#qr-left, canvas#qr-right {
+  z-index: 999;
+}

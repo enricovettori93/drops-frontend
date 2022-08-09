@@ -20,8 +20,11 @@
   },
   "dependencies": {
     "@auth0/auth0-spa-js": "^1.22.2",
+    "@types/p5": "^1.4.2",
     "colyseus.js": "^0.14.13",
+    "p5": "^1.4.2",
     "qrcode": "^1.5.1",
+    "socket.io-client": "^4.5.1",
     "solid-app-router": "^0.4.1",
     "solid-js": "^1.4.7"
   }
