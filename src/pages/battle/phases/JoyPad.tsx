@@ -2,6 +2,7 @@ import {createStore} from "solid-js/store";
 import {DEVELOPMENT_AT_END_ROUND, RESOURCES_AT_END_ROUND, SLIDER_TYPE} from "../../../shared/constants";
 import {createMemo, onMount} from "solid-js";
 import {BattleInfoCurrentPlayer} from "../../../models/user";
+import JoyPadInput from "./JoyPadInput";
 
 interface SliderState {
   military: ResourceType
@@ -118,66 +119,44 @@ const JoyPad = ({onChange, playerStats}: JoyPadProps) => {
       </p>
       <input type="range" min={0} max={100} value={playerStats.milestones_reached === 9 ? 100 : playerStats.development} disabled/>
       <div class={"flex flex-col"}>
-        <div class="range-container">
-          <label for={SLIDER_TYPE.MILITARY}>Military</label>
-          <div class={"flex"}>
-            <button class={"w-[20px]"} onClick={(e: any) => triggerLock(SLIDER_TYPE.MILITARY)}>
-              <em class={lockIcon(SLIDER_TYPE.MILITARY)}></em>
-            </button>
-            <input onInput={(e: any) => handleSliderInput(parseInt(e.target.value, 10), SLIDER_TYPE.MILITARY)}
-                   onChange={handleSliderChange}
-                   type="range"
-                   min={0}
-                   max={100}
-                   id={SLIDER_TYPE.MILITARY}
-                   value={joyPadStore.military.value}
-                   step={1}
-                   class={"basis-10/12"}
-                   disabled={isInputDisabled(SLIDER_TYPE.MILITARY)}
-            />
-            <span class={"mx-auto"}>{Math.ceil(joyPadStore.military.value)}</span>
-          </div>
-        </div>
-        <div class="range-container">
-          <label for={SLIDER_TYPE.PRODUCTION}>Production</label>
-          <div class={"flex"}>
-            <button class={"w-[20px]"} onClick={(e: any) => triggerLock(SLIDER_TYPE.PRODUCTION)}>
-              <em class={lockIcon(SLIDER_TYPE.PRODUCTION)}></em>
-            </button>
-            <input onInput={(e: any) => handleSliderInput(parseInt(e.target.value, 10), SLIDER_TYPE.PRODUCTION)}
-                   onChange={handleSliderChange}
-                   type="range"
-                   min={0}
-                   max={100}
-                   id={SLIDER_TYPE.PRODUCTION}
-                   value={joyPadStore.production.value}
-                   step={1}
-                   class={"basis-10/12"}
-                   disabled={isInputDisabled(SLIDER_TYPE.PRODUCTION)}
-            />
-            <span class={"mx-auto"}>{((joyPadStore.production.value / 100) * RESOURCES_AT_END_ROUND).toFixed(1)}/turn</span>
-          </div>
-        </div>
-        <div class="range-container">
-          <label for={SLIDER_TYPE.RESEARCH}>Research</label>
-          <div class={"flex"}>
-            <button class={"w-[20px]"} onClick={(e: any) => triggerLock(SLIDER_TYPE.RESEARCH)}>
-              <em class={lockIcon(SLIDER_TYPE.RESEARCH)}></em>
-            </button>
-            <input onInput={(e: any) => handleSliderInput(parseInt(e.target.value, 10), SLIDER_TYPE.RESEARCH)}
-                   onChange={handleSliderChange}
-                   type="range"
-                   min={0}
-                   max={100}
-                   id={SLIDER_TYPE.RESEARCH}
-                   value={joyPadStore.research.value}
-                   step={1}
-                   class={"basis-10/12"}
-                   disabled={isInputDisabled(SLIDER_TYPE.RESEARCH)}
-            />
-            <span class={"mx-auto"}>{((joyPadStore.research.value / 100) * DEVELOPMENT_AT_END_ROUND).toFixed(1)}/turn</span>
-          </div>
-        </div>
+        <JoyPadInput
+          value={joyPadStore.military.value}
+          type={SLIDER_TYPE.MILITARY}
+          max={100}
+          min={0}
+          label={"Military"}
+          isDisabled={isInputDisabled(SLIDER_TYPE.MILITARY)}
+          onChange={handleSliderChange}
+          onInput={handleSliderInput}
+          onLock={triggerLock}
+          labelFormula={(value) => (`${Math.ceil(value)}`)}
+        />
+
+        <JoyPadInput
+          value={joyPadStore.production.value}
+          type={SLIDER_TYPE.PRODUCTION}
+          max={100}
+          min={0}
+          label={"Production"}
+          isDisabled={isInputDisabled(SLIDER_TYPE.PRODUCTION)}
+          onChange={handleSliderChange}
+          onInput={handleSliderInput}
+          onLock={triggerLock}
+          labelFormula={(value) => (`${((value / 100) * RESOURCES_AT_END_ROUND).toFixed(1)}/turn`)}
+        />
+
+        <JoyPadInput
+          value={joyPadStore.research.value}
+          type={SLIDER_TYPE.RESEARCH}
+          max={100}
+          min={0}
+          label={"Research"}
+          isDisabled={isInputDisabled(SLIDER_TYPE.RESEARCH)}
+          onChange={handleSliderChange}
+          onInput={handleSliderInput}
+          onLock={triggerLock}
+          labelFormula={(value) => (`${((value / 100) * DEVELOPMENT_AT_END_ROUND).toFixed(1)}/turn`)}
+        />
       </div>
     </>
   )
